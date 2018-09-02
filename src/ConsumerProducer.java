@@ -1,10 +1,17 @@
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
+import java.util.*;
 
 public class ConsumerProducer {
 private static Buffer buffer = new Buffer();
 
+
+
 public static void main (String [] args){
+	//Initialize the linked list with elements.
+	for (int i = 1; i <21; i++){
+		buffer.queue.add(i);
+	}
 	//Create a thread pool with two threads
 	ExecutorService executor  = Executors.newFixedThreadPool(2);
 	executor.execute(new ProducerTask());
@@ -15,9 +22,9 @@ public static void main (String [] args){
 private static class ProducerTask implements Runnable{
 	public void run(){
 		try {
-			int i  = 1;
+			int i  = buffer.queue.size();
 			while (true){
-				System.out.println("Producer added client " + i);
+				System.out.println("Producer added client " + (i + 1));
 				buffer.write(i++);
 				//Put the thread into sleep
 				Thread.sleep((int)(Math.random() * 10000));
@@ -48,16 +55,16 @@ private static class ConsumerTask implements Runnable{
 
 //An inner class for buffer
  private static class Buffer{
-	 private static final int CAPACITY = 1; //buffer size
-	 private java.util.LinkedList <Integer> queue = new java.util.LinkedList<>();
-	 
+	 private static final int CAPACITY = 30; //buffer size
+	 public LinkedList <Integer> queue = new LinkedList<Integer>();
+	
 	 //Create  a new lock
 	 private static Lock lock = new ReentrantLock();
 	 
 	 //Create two conditions
 	 private static Condition notEmpty = lock.newCondition();
 	 private static Condition notFull =  lock.newCondition();
-	 
+	
 	 public void write (int value){
 		 lock.lock();
 		 try {
@@ -68,6 +75,7 @@ private static class ConsumerTask implements Runnable{
 			 
 			 queue.offer(value);
 			 notEmpty.signal();
+			 System.out.println("The queue size is now " + queue.size() + " after a customer joined the line");
 		 }
 		 
 		 catch(InterruptedException ex){
@@ -90,6 +98,7 @@ private static class ConsumerTask implements Runnable{
 			 
 			 notFull.signal();
 			value =  new Integer (queue.remove());
+			System.out.println("The queue size is now " + queue.size() + " after checking out a customer");
 			
 			
 			
