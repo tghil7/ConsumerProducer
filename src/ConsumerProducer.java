@@ -13,7 +13,7 @@ public static void main (String [] args){
 		buffer.queue.add(i);
 	}
 	//Create a thread pool with two threads
-	ExecutorService executor  = Executors.newFixedThreadPool(2);
+	ExecutorService executor  = Executors.newFixedThreadPool(10);
 	executor.execute(new ProducerTask());
 	executor.execute(new ConsumerTask());
 	executor.shutdown();
@@ -24,7 +24,7 @@ private static class ProducerTask implements Runnable{
 		try {
 			int i  = buffer.queue.size();
 			while (true){
-				System.out.println("Producer added client " + (i + 1));
+				System.out.println("Client " + (i + 1) + " was added.");
 				buffer.write(i++);
 				//Put the thread into sleep
 				Thread.sleep((int)(Math.random() * 10000));
@@ -41,7 +41,22 @@ private static class ConsumerTask implements Runnable{
 	public void run() {
 		try {
 			while (true){
-				System.out.println("\t\t\tConsumer processed " + buffer.read());
+				System.out.println("\t\t\tCashier processed " + buffer.read());
+				//Put the thread into sleep
+				Thread.sleep((int) (Math.random() * 10000));
+			     }
+		    }
+		catch(InterruptedException ex){
+			ex.printStackTrace();
+		}
+	}
+}
+
+private static class ManagerTask implements Runnable{
+	public void run() {
+		try {
+			while (true){
+								
 				//Put the thread into sleep
 				Thread.sleep((int) (Math.random() * 10000));
 			     }
