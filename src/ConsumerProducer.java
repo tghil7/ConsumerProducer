@@ -4,13 +4,15 @@ import java.util.*;
 
 public class ConsumerProducer {
 private static Buffer buffer = new Buffer();
+static int original_number = 21;
 
 
 
 public static void main (String [] args){
+	
 	//Initialize the linked list with elements.
 	for (int i = 1; i <21; i++){
-		buffer.queue.add(i);
+		buffer.queue.add(new Customer (i+1, System.nanoTime(), 0, 0));
 	}
 	//Create a thread pool with two threads
 	ExecutorService executor  = Executors.newFixedThreadPool(10);
@@ -22,10 +24,10 @@ public static void main (String [] args){
 private static class ProducerTask implements Runnable{
 	public void run(){
 		try {
-			int i  = buffer.queue.size();
+			
 			while (true){
-				System.out.println("Client " + (i + 1) + " was added.");
-				buffer.write(i++);
+				System.out.println("Client " + (original_number += 1) + " was added.");
+				buffer.write( new Customer(original_number,System.nanoTime(), 0, 0));
 				//Put the thread into sleep
 				Thread.sleep((int)(Math.random() * 10000));
 			}
@@ -52,26 +54,13 @@ private static class ConsumerTask implements Runnable{
 	}
 }
 
-private static class ManagerTask implements Runnable{
-	public void run() {
-		try {
-			while (true){
-								
-				//Put the thread into sleep
-				Thread.sleep((int) (Math.random() * 10000));
-			     }
-		    }
-		catch(InterruptedException ex){
-			ex.printStackTrace();
-		}
-	}
-}
+
 
 
 //An inner class for buffer
  private static class Buffer{
 	 private static final int CAPACITY = 30; //buffer size
-	 public LinkedList <Integer> queue = new LinkedList<Integer>();
+	 public LinkedList <Customer> queue = new LinkedList<Customer>();
 	
 	 //Create  a new lock
 	 private static Lock lock = new ReentrantLock();
@@ -80,7 +69,7 @@ private static class ManagerTask implements Runnable{
 	 private static Condition notEmpty = lock.newCondition();
 	 private static Condition notFull =  lock.newCondition();
 	
-	 public void write (int value){
+	 public void write (Customer value){
 		 lock.lock();
 		 try {
 			 while (queue.size() == CAPACITY){
@@ -101,18 +90,19 @@ private static class ManagerTask implements Runnable{
 		 }
 	 }
 	 
-	 public Integer read() {
+	 public int read() {
 		 lock.lock();
-		 Integer value = new Integer(0);
+		 Customer customerRemoved = new Customer();
+		
 		 try {
 			 while(queue.isEmpty()){
 				 System.out.println("\t\t\tWait for notEmpty condition");
 				 notEmpty.await();
-			 }
+			 	}
 			 
 			 
 			 notFull.signal();
-			value =  new Integer (queue.remove());
+			 customerRemoved =  queue.remove();
 			System.out.println("The queue size is now " + queue.size() + " after checking out a customer");
 			
 			
@@ -122,10 +112,11 @@ private static class ManagerTask implements Runnable{
 			 ex.printStackTrace();
 		 }
 		 finally{
-			 lock.unlock();			 
+			 lock.unlock();	
+			 
 		 }
-		 return value;
-		 
+		
+		 return customerRemoved.getId();
 	 }
  }
 }
